@@ -9,6 +9,7 @@ namespace ES.NetCore.LoggingMiddleware.Models
         public dynamic RequestContext { get; }
         public dynamic ResponseContext { get; }
         public long ElapsedMilliseconds { get; }
+        public string Timestamp { get; }
 
         public RequestFinished(ref Stopwatch stopwatch, dynamic requestContext, HttpContext httpContext)
         {
@@ -21,11 +22,13 @@ namespace ES.NetCore.LoggingMiddleware.Models
                 httpContext.Response.StatusCode,
                 httpContext.Response.ContentType
             };
+
+            Timestamp = DateTimeOffset.UtcNow.ToString(ElasticLoggingMiddleware.DateTimeOffsetFormat);
         }
 
         public override string ToString()
         {
-            return $"Request finished with status {ResponseContext.StatusCode} in {ElapsedMilliseconds} ms {RequestContext.Path} at {DateTimeOffset.UtcNow} ({RequestContext.CorrelationId})";
+            return $"Request finished with status {ResponseContext.StatusCode} in {ElapsedMilliseconds} ms {RequestContext.Path} at {Timestamp} ({RequestContext.CorrelationId})";
         }
     }
 }

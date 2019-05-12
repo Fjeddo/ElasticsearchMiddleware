@@ -7,6 +7,7 @@ namespace ES.NetCore.LoggingMiddleware.Models
     public class RequestStarting
     {
         public dynamic RequestContext { get; }
+        public string Timestamp { get; }
 
         public RequestStarting(ref Stopwatch stopwatch, HttpContext context, out dynamic ctx)
         {
@@ -24,11 +25,13 @@ namespace ES.NetCore.LoggingMiddleware.Models
             stopwatch?.Start();
 
             ctx = RequestContext;
-        }
 
+            Timestamp = DateTimeOffset.UtcNow.ToString(ElasticLoggingMiddleware.DateTimeOffsetFormat);
+        }
+        
         public override string ToString()
         {
-            return $"Request started {RequestContext.Path} at {DateTimeOffset.UtcNow} ({RequestContext.CorrelationId})";
+            return $"Request started {RequestContext.Path} at {Timestamp} ({RequestContext.CorrelationId})";
         }
     }
 }
