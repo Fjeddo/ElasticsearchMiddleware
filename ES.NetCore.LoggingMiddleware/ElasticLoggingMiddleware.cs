@@ -1,7 +1,6 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Threading.Tasks;
-using ES.NetCore.LoggingMiddleware.Models;
+using ES.LoggingMiddleware.Common.Models;
 using log4net;
 using Microsoft.AspNetCore.Http;
 
@@ -9,8 +8,6 @@ namespace ES.NetCore.LoggingMiddleware
 {
     internal class ElasticLoggingMiddleware
     {
-        internal const string DateTimeOffsetFormat = "yyyy-MM-dd HH:mm:ss.fffzzz";
-
         private readonly RequestDelegate _next;
         private readonly ILog _log;
 
@@ -49,7 +46,7 @@ namespace ES.NetCore.LoggingMiddleware
 
             public void LogRequestStarting()
             {
-                var requestStarting = new RequestStarting(_context, out _logContext);
+                var requestStarting = new RequestStarting(new HttpRequestContext(_context), out _logContext);
 
                 _logOverheadStopwatch.Start();
                 _log.Info(requestStarting);
@@ -63,13 +60,14 @@ namespace ES.NetCore.LoggingMiddleware
                 _requestStopwatch.Stop();
                 var requestTimeElapsed = _requestStopwatch.ElapsedMilliseconds;
 
-                var requestFinished = new RequestFinished(requestTimeElapsed, _logContext, _context);
+                var requestFinished =
+                    new RequestFinished(requestTimeElapsed, _logContext, new HttpResponseContext(_context));
 
                 _logOverheadStopwatch.Start();
                 _log.Info(requestFinished);
                 _logOverheadStopwatch.Stop();
 
-                _log.Debug($"DEBUG {DateTimeOffset.Now.ToString(DateTimeOffsetFormat)}: Request/response logging overhead {_logOverheadStopwatch.ElapsedMilliseconds} ms ({_logContext.CorrelationId})");
+                //_log.Debug($"DEBUG {DateTimeOffset.Now.ToString(Constants.DateTimeOffsetFormat)}: Request/response logging overhead {_logOverheadStopwatch.ElapsedMilliseconds} ms ({_logContext.CorrelationId})");
 
             }
         }

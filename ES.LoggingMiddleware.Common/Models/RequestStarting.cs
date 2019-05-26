@@ -1,28 +1,32 @@
 ﻿using System;
-using Microsoft.AspNetCore.Http;
 
-namespace ES.NetCore.LoggingMiddleware.Models
+namespace ES.LoggingMiddleware.Common.Models
 {
+    internal class Constants
+    {
+        internal const string DateTimeOffsetFormat = "yyyy-MM-dd HH:mm:ss.fffzzz";
+    }
+
     public class RequestStarting
     {
         public dynamic RequestContext { get; }
         public string Timestamp { get; }
 
-        public RequestStarting(HttpContext context, out dynamic ctx)
+        public RequestStarting(IHttpRequestContext context, out dynamic ctx)
         {
             RequestContext = new
             {
                 CorrelationId = Guid.NewGuid(),
-                context.Request.Path,
-                context.Request.Host,
-                context.Request.IsHttps,
-                context.Request.Method,
-                context.Request.Headers
+                context.Path,
+                context.Host,
+                context.IsHttps,
+                context.Method,
+                context.Headers
             };
 
             ctx = RequestContext;
 
-            Timestamp = DateTimeOffset.Now.ToString(ElasticLoggingMiddleware.DateTimeOffsetFormat);
+            Timestamp = DateTimeOffset.Now.ToString(Constants.DateTimeOffsetFormat);
         }
         
         public override string ToString()

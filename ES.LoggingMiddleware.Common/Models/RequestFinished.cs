@@ -1,7 +1,6 @@
 ﻿using System;
-using Microsoft.AspNetCore.Http;
 
-namespace ES.NetCore.LoggingMiddleware.Models
+namespace ES.LoggingMiddleware.Common.Models
 {
     public class RequestFinished
     {
@@ -10,17 +9,17 @@ namespace ES.NetCore.LoggingMiddleware.Models
         public long ElapsedMilliseconds { get; }
         public string Timestamp { get; }
 
-        public RequestFinished(long elapsedMilliseconds, dynamic requestContext, HttpContext httpContext)
+        public RequestFinished(long elapsedMilliseconds, dynamic requestContext, IHttpResponseContext httpContext)
         {
             ElapsedMilliseconds = elapsedMilliseconds;
             RequestContext = requestContext;
             ResponseContext = new
             {
-                httpContext.Response.StatusCode,
-                httpContext.Response.ContentType
+                httpContext.StatusCode,
+                httpContext.ContentType
             };
 
-            Timestamp = DateTimeOffset.Now.ToString(ElasticLoggingMiddleware.DateTimeOffsetFormat);
+            Timestamp = DateTimeOffset.Now.ToString(Constants.DateTimeOffsetFormat);
         }
 
         public override string ToString()
