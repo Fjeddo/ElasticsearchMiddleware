@@ -9,7 +9,7 @@ namespace ES.NetCore.LoggingMiddleware
 {
     internal class ElasticLoggingMiddleware
     {
-        internal const string DateTimeOffsetFormat = "yyyy-MM-dd HH:mm:ss.fff zzz";
+        internal const string DateTimeOffsetFormat = "yyyy-MM-dd HH:mm:ss.fffzzz";
 
         private readonly RequestDelegate _next;
         private readonly ILog _log;
@@ -22,20 +22,56 @@ namespace ES.NetCore.LoggingMiddleware
 
         public async Task Invoke(HttpContext context)
         {
-            var stopwatch = new Stopwatch();
-            var debuggSW = new Stopwatch();
+            var logger = new InternalLogger(_log, context);
 
-            debuggSW.Start();
-            _log.Info(new RequestStarting(ref stopwatch, context, out var logContext));
-            debuggSW.Stop();
+            logger.LogRequestStarting();
 
             await _next(context);
 
-            debuggSW.Start();
-            _log.Info(new RequestFinished(ref stopwatch, logContext, context));
-            debuggSW.Stop();
+            logger.LogRequestEnding();
+        }
 
-            _log.Debug($"DEBUG {DateTimeOffset.UtcNow.ToString(DateTimeOffsetFormat)}: Request/response logging overhead {debuggSW.ElapsedMilliseconds} ms ({logContext.CorrelationId})");
+        private class InternalLogger
+        {
+            private readonly ILog _log;
+            private readonly HttpContext _context;
+            private readonly Stopwatch _logOverheadStopwatch;
+            private readonly Stopwatch _requestStopwatch;
+            private dynamic _logContext;
+
+            public InternalLogger(ILog log, HttpContext context)
+            {
+                _log = log;
+                _context = context;
+                _logOverheadStopwatch = new Stopwatch();
+                _requestStopwatch = new Stopwatch();
+            }
+
+            public void LogRequestStarting()
+            {
+                var requestStarting = new RequestStarting(_context, out _logContext);
+
+                _logOverheadStopwatch.Start();
+                _log.Info(requestStarting);
+                _logOverheadStopwatch.Stop();
+
+                _requestStopwatch.Restart();
+            }
+
+            public void LogRequestEnding()
+            {
+                _requestStopwatch.Stop();
+                var requestTimeElapsed = _requestStopwatch.ElapsedMilliseconds;
+
+                var requestFinished = new RequestFinished(requestTimeElapsed, _logContext, _context);
+
+                _logOverheadStopwatch.Start();
+                _log.Info(requestFinished);
+                _logOverheadStopwatch.Stop();
+
+                _log.Debug($"DEBUG {DateTimeOffset.Now.ToString(DateTimeOffsetFormat)}: Request/response logging overhead {_logOverheadStopwatch.ElapsedMilliseconds} ms ({_logContext.CorrelationId})");
+
+            }
         }
     }
 }
