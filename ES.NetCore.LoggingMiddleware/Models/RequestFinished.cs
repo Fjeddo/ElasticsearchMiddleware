@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using Microsoft.AspNetCore.Http;
 
 namespace ES.NetCore.LoggingMiddleware.Models
@@ -11,11 +10,9 @@ namespace ES.NetCore.LoggingMiddleware.Models
         public long ElapsedMilliseconds { get; }
         public string Timestamp { get; }
 
-        public RequestFinished(ref Stopwatch stopwatch, dynamic requestContext, HttpContext httpContext)
+        public RequestFinished(long elapsedMilliseconds, dynamic requestContext, HttpContext httpContext)
         {
-            stopwatch?.Stop();
-            ElapsedMilliseconds = stopwatch?.ElapsedMilliseconds ?? -1;
-
+            ElapsedMilliseconds = elapsedMilliseconds;
             RequestContext = requestContext;
             ResponseContext = new
             {
@@ -23,7 +20,7 @@ namespace ES.NetCore.LoggingMiddleware.Models
                 httpContext.Response.ContentType
             };
 
-            Timestamp = DateTimeOffset.UtcNow.ToString(ElasticLoggingMiddleware.DateTimeOffsetFormat);
+            Timestamp = DateTimeOffset.Now.ToString(ElasticLoggingMiddleware.DateTimeOffsetFormat);
         }
 
         public override string ToString()
