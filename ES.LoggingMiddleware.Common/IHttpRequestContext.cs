@@ -26,12 +26,6 @@ namespace ES.LoggingMiddleware.Common
         public int? Port { get; }
         public string Value { get; }
     }
-
-    public interface IHttpResponseContext
-    {
-        int StatusCode { get; }
-        string ContentType { get; }
-    }
 }
    
 
